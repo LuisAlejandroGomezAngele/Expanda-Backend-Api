@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiExpanda.Domain.Modules.Catalogos.Entities;
 
+[Index(nameof(Code), IsUnique = true, Name = "IX_Companies_Code")]
+[Index(nameof(IsActive), Name = "IX_Companies_IsActive")]
 public class Company
 {
     [Key]
