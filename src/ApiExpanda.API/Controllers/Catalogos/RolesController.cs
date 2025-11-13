@@ -10,6 +10,7 @@ namespace ApiExpanda.API.Controllers.Catalogos;
 [ApiController]
 [Route("api/v{version:apiVersion}/Catalogos/[controller]")]
 [ApiVersion("1.0")]
+[Authorize]
 
 public class RolesController : ControllerBase
 {
