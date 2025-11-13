@@ -3,6 +3,8 @@ using System.Linq;
 using Microsoft.AspNetCore.Identity;
 using ApiExpanda.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using CategoryEntity = ApiExpanda.Domain.Modules.Catalogos.Entities.Category;
+using ProductEntity = ApiExpanda.Domain.Modules.Catalogos.Entities.Product;
 
 namespace ApiExpanda.Infrastructure.Data;
 
@@ -25,11 +27,11 @@ public static class DataSeeder
         if (!appContext.Categories.Any())
         {
             appContext.Categories.AddRange(
-              new Category { Name = "Ropa y accesorios", CreationDate = DateTime.Now },
-              new Category { Name = "Electrónicos", CreationDate = DateTime.Now },
-              new Category { Name = "Deportes", CreationDate = DateTime.Now },
-              new Category { Name = "Hogar", CreationDate = DateTime.Now },
-              new Category { Name = "Libros", CreationDate = DateTime.Now }
+              new CategoryEntity { Name = "Ropa y accesorios", CreationDate = DateTime.Now },
+              new CategoryEntity { Name = "Electrónicos", CreationDate = DateTime.Now },
+              new CategoryEntity { Name = "Deportes", CreationDate = DateTime.Now },
+              new CategoryEntity { Name = "Hogar", CreationDate = DateTime.Now },
+              new CategoryEntity { Name = "Libros", CreationDate = DateTime.Now }
             );
         }
         // Seeding de Usuario Administrador
@@ -75,7 +77,7 @@ public static class DataSeeder
         if (!appContext.Products.Any())
         {
             appContext.Products.AddRange(
-              new Product
+              new ProductEntity
               {
                   Name = "Camiseta Básica",
                   Description = "Camiseta de algodón 100%",
@@ -83,11 +85,11 @@ public static class DataSeeder
                   SKU = "PROD-001-CAM-M",
                   Stock = 50,
                   CategoryId = 1,
-                  Category = appContext.Categories.Find(1)!,
+                  Category = appContext.Categories.Find(1),
                   ImgUrl = "https://via.placeholder.com/300x300/FF0000/FFFFFF?text=Camiseta",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Smartphone Galaxy",
                   Description = "Teléfono inteligente con 128GB",
@@ -95,11 +97,11 @@ public static class DataSeeder
                   SKU = "PROD-002-PHO-BLK",
                   Stock = 25,
                   CategoryId = 2,
-                  Category = appContext.Categories.Find(2)!,
+                  Category = appContext.Categories.Find(2),
                   ImgUrl = "https://via.placeholder.com/300x300/0000FF/FFFFFF?text=Smartphone",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Pelota de Fútbol",
                   Description = "Pelota oficial FIFA",
@@ -107,11 +109,11 @@ public static class DataSeeder
                   SKU = "PROD-003-BAL-WHT",
                   Stock = 30,
                   CategoryId = 3,
-                  Category = appContext.Categories.Find(3)!,
+                  Category = appContext.Categories.Find(3),
                   ImgUrl = "https://via.placeholder.com/300x300/00FF00/FFFFFF?text=Pelota",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Lámpara de Mesa",
                   Description = "Lámpara LED regulable",
@@ -119,11 +121,11 @@ public static class DataSeeder
                   SKU = "PROD-004-LAM-WHT",
                   Stock = 15,
                   CategoryId = 4,
-                  Category = appContext.Categories.Find(4)!,
+                  Category = appContext.Categories.Find(4),
                   ImgUrl = "https://via.placeholder.com/300x300/FFFF00/000000?text=Lampara",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "El Quijote",
                   Description = "Novela clásica de Cervantes",
@@ -131,11 +133,11 @@ public static class DataSeeder
                   SKU = "PROD-005-LIB-ESP",
                   Stock = 100,
                   CategoryId = 5,
-                  Category = appContext.Categories.Find(5)!,
+                  Category = appContext.Categories.Find(5),
                   ImgUrl = "https://via.placeholder.com/300x300/800080/FFFFFF?text=Libro",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Jeans Clásicos",
                   Description = "Pantalones vaqueros azules",
@@ -143,11 +145,11 @@ public static class DataSeeder
                   SKU = "PROD-006-PAN-BLU",
                   Stock = 40,
                   CategoryId = 1,
-                  Category = appContext.Categories.Find(1)!,
+                  Category = appContext.Categories.Find(1),
                   ImgUrl = "https://via.placeholder.com/300x300/4169E1/FFFFFF?text=Jeans",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Tablet Pro",
                   Description = "Tablet 10.5 pulgadas con stylus incluido",
@@ -155,11 +157,11 @@ public static class DataSeeder
                   SKU = "PROD-007-TAB-SIL",
                   Stock = 20,
                   CategoryId = 2,
-                  Category = appContext.Categories.Find(2)!,
+                  Category = appContext.Categories.Find(2),
                   ImgUrl = "https://via.placeholder.com/300x300/C0C0C0/000000?text=Tablet",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Zapatillas Running",
                   Description = "Zapatillas deportivas para correr",
@@ -167,11 +169,11 @@ public static class DataSeeder
                   SKU = "PROD-008-ZAP-BLK",
                   Stock = 35,
                   CategoryId = 3,
-                  Category = appContext.Categories.Find(3)!,
+                  Category = appContext.Categories.Find(3),
                   ImgUrl = "https://via.placeholder.com/300x300/000000/FFFFFF?text=Zapatillas",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Cafetera Express",
                   Description = "Cafetera automática con molinillo integrado",
@@ -179,11 +181,11 @@ public static class DataSeeder
                   SKU = "PROD-009-CAF-BLK",
                   Stock = 12,
                   CategoryId = 4,
-                  Category = appContext.Categories.Find(4)!,
+                  Category = appContext.Categories.Find(4),
                   ImgUrl = "https://via.placeholder.com/300x300/2F4F4F/FFFFFF?text=Cafetera",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Programación en C#",
                   Description = "Guía completa de programación en C# y .NET",
@@ -191,11 +193,11 @@ public static class DataSeeder
                   SKU = "PROD-010-LIB-ESP",
                   Stock = 80,
                   CategoryId = 5,
-                  Category = appContext.Categories.Find(5)!,
+                  Category = appContext.Categories.Find(5),
                   ImgUrl = "https://via.placeholder.com/300x300/008B8B/FFFFFF?text=C%23+Book",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Chaqueta Deportiva",
                   Description = "Chaqueta impermeable para actividades al aire libre",
@@ -203,11 +205,11 @@ public static class DataSeeder
                   SKU = "PROD-011-CHA-NAV",
                   Stock = 28,
                   CategoryId = 1,
-                  Category = appContext.Categories.Find(1)!,
+                  Category = appContext.Categories.Find(1),
                   ImgUrl = "https://via.placeholder.com/300x300/000080/FFFFFF?text=Chaqueta",
                   CreationDate = DateTime.Now
               },
-              new Product
+              new ProductEntity
               {
                   Name = "Auriculares Bluetooth",
                   Description = "Auriculares inalámbricos con cancelación de ruido",
@@ -215,7 +217,7 @@ public static class DataSeeder
                   SKU = "PROD-012-AUR-BLK",
                   Stock = 45,
                   CategoryId = 2,
-                  Category = appContext.Categories.Find(2)!,
+                  Category = appContext.Categories.Find(2),
                   ImgUrl = "https://via.placeholder.com/300x300/1C1C1C/FFFFFF?text=Auriculares",
                   CreationDate = DateTime.Now
               }

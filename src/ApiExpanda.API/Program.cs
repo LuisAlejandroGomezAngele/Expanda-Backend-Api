@@ -41,23 +41,25 @@ builder.Services.AddResponseCaching(options =>
     options.UseCaseSensitivePaths = true;
 });
 
-// Registro de Repositorios
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
+// ============= LEGACY REPOSITORIES (Comentado - usar versiones modulares) =============
+// builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+// builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// Módulo Catalogos - Repositorios
+// ============= MÓDULO CATALOGOS - REPOSITORIOS =============
+builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Interfaces.ICategoryRepository, ApiExpanda.Infrastructure.Modules.Catalogos.Repositories.CategoryRepository>();
+builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Interfaces.IProductRepository, ApiExpanda.Infrastructure.Modules.Catalogos.Repositories.ProductRepository>();
 builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Interfaces.ICompanyRepository, ApiExpanda.Infrastructure.Modules.Catalogos.Repositories.CompanyRepository>();
 
-// Registro de Servicios
-builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.ICategoryService, ApiExpanda.Infrastructure.Services.CategoryService>();
-builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IProductService, ApiExpanda.Infrastructure.Services.ProductService>();
+// ============= LEGACY SERVICES (Comentado - usar versiones modulares) =============
+// builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.ICategoryService, ApiExpanda.Infrastructure.Services.CategoryService>();
+// builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IProductService, ApiExpanda.Infrastructure.Services.ProductService>();
 builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IUserService, ApiExpanda.Infrastructure.Services.UserService>();
 
-// Módulo Catalogos - Servicios
+// ============= MÓDULO CATALOGOS - SERVICIOS =============
+builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Services.Interfaces.ICategoryService, ApiExpanda.Infrastructure.Modules.Catalogos.Services.CategoryService>();
+builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Services.Interfaces.IProductService, ApiExpanda.Infrastructure.Modules.Catalogos.Services.ProductService>();
 builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Services.Interfaces.ICompanyService, ApiExpanda.Infrastructure.Modules.Catalogos.Services.CompanyService>();
-builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IProductService, ApiExpanda.Infrastructure.Services.ProductService>();
-builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IUserService, ApiExpanda.Infrastructure.Services.UserService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -98,10 +100,16 @@ builder.Services.AddControllers(Options =>
 
 // Configurar Mapster
 var mapsterConfig = TypeAdapterConfig.GlobalSettings;
-// Registrar mappings definidos en la carpeta Mapping
-ApiExpanda.Application.Mappings.CategoryMapping.RegisterMappings(mapsterConfig);
-ApiExpanda.Application.Mappings.ProductMapping.RegisterMappings(mapsterConfig);
+
+// ============= LEGACY MAPPINGS (Comentado - usar versiones modulares) =============
+// ApiExpanda.Application.Mappings.CategoryMapping.RegisterMappings(mapsterConfig);
+// ApiExpanda.Application.Mappings.ProductMapping.RegisterMappings(mapsterConfig);
 ApiExpanda.Application.Mappings.UserMapping.RegisterMappings(mapsterConfig);
+
+// ============= MÓDULO CATALOGOS - MAPPINGS =============
+ApiExpanda.Application.Modules.Catalogos.Mappings.CategoryMapping.RegisterMappings(mapsterConfig);
+ApiExpanda.Application.Modules.Catalogos.Mappings.ProductMapping.RegisterMappings(mapsterConfig);
+ApiExpanda.Application.Modules.Catalogos.Mappings.CompanyMapping.RegisterMappings(mapsterConfig);
 
 builder.Services.AddSingleton(mapsterConfig);
 // Registrar MapsterMapper ServiceMapper como IMapper

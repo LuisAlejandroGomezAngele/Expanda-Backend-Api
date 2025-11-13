@@ -4,9 +4,9 @@ using Mapster;
 
 namespace ApiExpanda.Application.Modules.Catalogos.Mappings;
 
-public class CompanyProfile : IRegister
+public static class CompanyMapping
 {
-    public void Register(TypeAdapterConfig config)
+    public static void RegisterMappings(TypeAdapterConfig config)
     {
         config.NewConfig<Company, CompanyDto>();
         
