@@ -1,0 +1,22 @@
+using Microsoft.EntityFrameworkCore;
+using ApiExpanda.Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+{
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    {
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        // Configuraciones adicionales del modelo si es necesario
+    }
+
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public new DbSet<User> Users { get; set; }
+
+    public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+}
