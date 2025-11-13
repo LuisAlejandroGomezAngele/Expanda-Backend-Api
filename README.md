@@ -1,10 +1,12 @@
 # 🛒 API Expanda
 
-API RESTful desarrollada con **ASP.NET Core 9.0** para la gestión de un sistema de comercio electrónico. Incluye autenticación JWT, versionado de API, caché de respuestas y manejo de productos, categorías y usuarios.
+API RESTful desarrollada con **ASP.NET Core 9.0** siguiendo **Clean Architecture** con estructura **modular**. Sistema empresarial completo para gestión de comercio, inventarios, seguridad y catálogos.
 
 ## 📋 Tabla de Contenidos
 
 - [Características](#-características)
+- [Arquitectura](#-arquitectura)
+- [Módulos Disponibles](#-módulos-disponibles)
 - [Tecnologías Utilizadas](#-tecnologías-utilizadas)
 - [Requisitos Previos](#-requisitos-previos)
 - [Instalación y Configuración](#-instalación-y-configuración)
@@ -16,20 +18,82 @@ API RESTful desarrollada con **ASP.NET Core 9.0** para la gestión de un sistema
 - [Versionado de API](#-versionado-de-api)
 - [Colección de Postman](#-colección-de-postman)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Documentación](#-documentación)
 - [Variables de Entorno](#-variables-de-entorno)
 
 ## ✨ Características
 
+- ✅ **Clean Architecture** con 4 capas (Domain, Application, Infrastructure, API)
+- ✅ **Arquitectura Modular** (Shared, Catalogos, Comercial, Inventario, Seguridad)
+- ✅ **Service Layer** para separación de lógica de negocio
 - ✅ **Autenticación JWT** con ASP.NET Core Identity
 - ✅ **Versionado de API** (v1 y v2)
 - ✅ **Caché de Respuestas** para optimización de rendimiento
 - ✅ **Entity Framework Core** con SQL Server
 - ✅ **Mapster** para mapeo de objetos
 - ✅ **Swagger/OpenAPI** para documentación interactiva
-- ✅ **Repository Pattern** para acceso a datos
+- ✅ **Repository Pattern** y **Service Pattern**
 - ✅ **CORS** habilitado
 - ✅ **Gestión de imágenes** de productos
 - ✅ **Data Seeding** automático
+
+## 🏗️ Arquitectura
+
+El proyecto implementa **Clean Architecture** con una estructura **modular**:
+
+```
+┌─────────────────────────────────────────────────┐
+│              API Layer                          │
+│  (Controllers organizados por módulos)         │
+└──────────────────┬──────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────┐
+│         Application Layer                       │
+│  (Services, DTOs, Interfaces por módulo)       │
+└──────────────────┬──────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────┐
+│           Domain Layer                          │
+│  (Entities organizadas por módulo)             │
+└──────────────────▲──────────────────────────────┘
+                   │
+┌──────────────────┴──────────────────────────────┐
+│       Infrastructure Layer                      │
+│  (Repositories, Data, Services impl)           │
+└─────────────────────────────────────────────────┘
+```
+
+### Documentación Detallada
+
+📚 **[Arquitectura Modular Completa](docs/ARQUITECTURA_MODULAR.md)** - Estructura detallada de módulos
+
+🚀 **[Guía Rápida de Desarrollo](docs/GUIA_RAPIDA_MODULOS.md)** - Cómo crear nuevas entidades paso a paso
+
+📋 **[Plan de Implementación](docs/PLAN_IMPLEMENTACION.md)** - Roadmap y cronograma
+
+## 📦 Módulos Disponibles
+
+### 🔐 **Seguridad**
+Autenticación, autorización, roles, permisos y compañías.
+- ✅ Usuarios (implementado)
+- ⚠️ Roles, Permisos, Compañías (en desarrollo)
+
+### 🏢 **Catálogos**
+Catálogos maestros y clasificaciones.
+- ✅ Categorías y Productos (implementado)
+- 🔲 Marcas, Unidades de Medida, Colores (planeado)
+
+### 💼 **Comercial**
+Ventas, clientes y facturación.
+- 🔲 Clientes, Ventas, Cotizaciones (planeado)
+
+### 📊 **Inventario**
+Control de stock y almacenes.
+- 🔲 Almacenes, Stock, Movimientos, Kardex (planeado)
+
+### 📦 **Shared**
+Componentes compartidos entre módulos.
+- 🔲 Entidades base, Value Objects, Utilidades (planeado)
 
 ## 🛠 Tecnologías Utilizadas
 
