@@ -81,6 +81,7 @@ Autenticación, autorización, roles, permisos y compañías.
 ### 🏢 **Catálogos**
 Catálogos maestros y clasificaciones.
 - ✅ Categorías y Productos (implementado)
+- ✅ Compañías (implementado)
 - 🔲 Marcas, Unidades de Medida, Colores (planeado)
 
 ### 💼 **Comercial**
@@ -216,38 +217,50 @@ docker-compose down -v
 ### Crear una Nueva Migración
 
 ```powershell
-# Navegar al directorio del proyecto
-cd ApiExpanda
+# Navegar al directorio raíz del proyecto
+cd C:\APIS\Expanda-backend-api
 
-# Crear migración
-dotnet ef migrations add NombreDeLaMigracion
+# Crear migración (formato completo)
+dotnet ef migrations add NombreDeLaMigracion --project src/ApiExpanda.Infrastructure/ApiExpanda.Infraestructure.csproj --startup-project src/ApiExpanda.API/ApiExpanda.csproj
+
+# Crear migración (formato corto)
+dotnet ef migrations add NombreDeLaMigracion -p src/ApiExpanda.Infrastructure -s src/ApiExpanda.API/ApiExpanda.csproj
 ```
 
 ### Aplicar Migraciones
 
 ```powershell
 # Aplicar todas las migraciones pendientes
-dotnet ef database update
+dotnet ef database update -p src/ApiExpanda.Infrastructure -s src/ApiExpanda.API/ApiExpanda.csproj
 
 # Aplicar migración específica
-dotnet ef database update NombreDeLaMigracion
+dotnet ef database update NombreDeLaMigracion -p src/ApiExpanda.Infrastructure -s src/ApiExpanda.API/ApiExpanda.csproj
 ```
 
 ### Ver Migraciones Disponibles
 
 ```powershell
-dotnet ef migrations list
+dotnet ef migrations list -p src/ApiExpanda.Infrastructure -s src/ApiExpanda.API/ApiExpanda.csproj
 ```
 
 ### Revertir Migraciones
 
 ```powershell
 # Revertir a una migración específica
-dotnet ef database update NombreDeLaMigracionAnterior
+dotnet ef database update NombreDeLaMigracionAnterior -p src/ApiExpanda.Infrastructure -s src/ApiExpanda.API/ApiExpanda.csproj
 
 # Revertir todas las migraciones (elimina la base de datos)
-dotnet ef database update 0
+dotnet ef database update 0 -p src/ApiExpanda.Infrastructure -s src/ApiExpanda.API/ApiExpanda.csproj
 ```
+
+### Eliminar la Última Migración (No Aplicada)
+
+```powershell
+# Eliminar la última migración sin aplicar
+dotnet ef migrations remove -p src/ApiExpanda.Infrastructure -s src/ApiExpanda.API/ApiExpanda.csproj
+```
+
+> **⚠️ Nota Importante**: Los comandos usan el proyecto Infrastructure con el nombre `ApiExpanda.Infraestructure.csproj` (con 'u' en Infrastructure) y el proyecto API como `ApiExpanda.csproj`.
 
 ### Eliminar la Última Migración
 
@@ -431,21 +444,119 @@ El proyecto incluye una colección de Postman lista para usar:
 
 ```
 ApiExpanda/
-├── Controllers/           # Controladores de la API
-│   ├── v1/               # Controladores versión 1
-│   └── v2/               # Controladores versión 2
-├── Models/               # Modelos de dominio
-│   └── Dtos/            # Data Transfer Objects
-│       └── Responses/   # DTOs de respuesta
-├── Repository/           # Implementación de repositorios
-│   └── IRepository/     # Interfaces de repositorios
-├── Data/                 # Contexto de base de datos y seeding
-├── Mapping/              # Configuración de Mapster
-├── Migrations/           # Migraciones de EF Core
-├── Constants/            # Constantes de la aplicación
-├── Properties/           # Configuración de lanzamiento
-└── wwwroot/             # Archivos estáticos
-    └── ProductsImages/  # Imágenes de productos
+├── src/
+│   ├── ApiExpanda.Domain/          # Capa de Dominio
+│   │   ├── Entities/               # Entidades legacy (migrar)
+│   │   └── Modules/                # Entidades por módulo
+│   │       ├── Shared/
+│   │       │   └── Entities/
+│   │       ├── Catalogos/
+│   │       │   └── Entities/
+│   │       │       ├── Category.cs (legacy, pendiente migrar)
+│   │       │       ├── Product.cs (legacy, pendiente migrar)
+│   │       │       └── Company.cs ✅
+│   │       ├── Comercial/
+│   │       │   └── Entities/
+│   │       ├── Inventario/
+│   │       │   └── Entities/
+│   │       └── Seguridad/
+│   │           └── Entities/
+│   │
+│   ├── ApiExpanda.Application/     # Capa de Aplicación
+│   │   ├── DTOs/                   # DTOs legacy (migrar)
+│   │   ├── Interfaces/             # Interfaces legacy (migrar)
+│   │   ├── Services/               # Servicios legacy (migrar)
+│   │   └── Modules/                # Por módulo
+│   │       ├── Catalogos/
+│   │       │   ├── DTOs/
+│   │       │   │   ├── CompanyDto.cs ✅
+│   │       │   │   ├── CreateCompanyDto.cs ✅
+│   │       │   │   └── UpdateCompanyDto.cs ✅
+│   │       │   ├── Interfaces/
+│   │       │   │   └── ICompanyRepository.cs ✅
+│   │       │   ├── Mappings/
+│   │       │   │   └── CompanyProfile.cs ✅
+│   │       │   └── Services/Interfaces/
+│   │       │       └── ICompanyService.cs ✅
+│   │       ├── Comercial/
+│   │       ├── Inventario/
+│   │       ├── Seguridad/
+│   │       └── Shared/
+│   │
+│   ├── ApiExpanda.Infrastructure/  # Capa de Infraestructura
+│   │   ├── Data/                   # Contexto y configuraciones
+│   │   ├── Repositories/           # Repositorios legacy (migrar)
+│   │   ├── Services/               # Servicios legacy (migrar)
+│   │   └── Modules/                # Por módulo
+│   │       ├── Catalogos/
+│   │       │   ├── Repositories/
+│   │       │   │   └── CompanyRepository.cs ✅
+│   │       │   ├── Services/
+│   │       │   │   └── CompanyService.cs ✅
+│   │       │   └── Data/Configurations/
+│   │       │       └── CompanyConfiguration.cs ✅
+│   │       ├── Comercial/
+│   │       ├── Inventario/
+│   │       ├── Seguridad/
+│   │       └── Shared/
+│   │
+│   └── ApiExpanda.API/             # Capa de Presentación
+│       ├── Controllers/
+│       │   ├── ProductsController.cs (legacy, migrar)
+│       │   ├── UsersController.cs (legacy, migrar)
+│       │   ├── v1/                 # Controladores v1 legacy
+│       │   ├── v2/                 # Controladores v2 legacy
+│       │   ├── Catalogos/
+│       │   │   └── CompaniesController.cs ✅
+│       │   ├── Comercial/
+│       │   ├── Inventario/
+│       │   ├── Seguridad/
+│       │   └── Shared/
+│       ├── Properties/
+│       ├── wwwroot/
+│       └── Program.cs
+│
+├── docs/                           # Documentación
+│   ├── ARQUITECTURA_MODULAR.md
+│   ├── GUIA_RAPIDA_MODULOS.md
+│   ├── PLAN_IMPLEMENTACION.md
+│   └── ESTRUCTURA_MODULAR_IMPLEMENTADA.md
+│
+├── docker-compose.yaml
+├── ApiExpanda.sln
+└── README.md
+```
+
+### Convenciones de Arquitectura Modular
+
+**Namespaces:**
+```csharp
+// Domain
+ApiExpanda.Domain.Modules.{Modulo}.Entities
+
+// Application
+ApiExpanda.Application.Modules.{Modulo}.DTOs
+ApiExpanda.Application.Modules.{Modulo}.Interfaces
+ApiExpanda.Application.Modules.{Modulo}.Services.Interfaces
+
+// Infrastructure
+ApiExpanda.Infrastructure.Modules.{Modulo}.Repositories
+ApiExpanda.Infrastructure.Modules.{Modulo}.Services
+ApiExpanda.Infrastructure.Modules.{Modulo}.Data.Configurations
+
+// API
+ApiExpanda.API.Controllers.{Modulo}
+```
+
+**Rutas de API:**
+```
+/api/v{version}/{Modulo}/{Controller}/{action}
+
+Ejemplos:
+- GET  /api/v1/Catalogos/Companies
+- POST /api/v1/Catalogos/Companies
+- GET  /api/v1/Catalogos/Products
+- POST /api/v1/Seguridad/Users/Login
 ```
 
 ## 🔧 Variables de Entorno
