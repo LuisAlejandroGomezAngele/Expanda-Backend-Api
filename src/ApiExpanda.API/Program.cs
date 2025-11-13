@@ -114,11 +114,13 @@ ApiExpanda.Application.Modules.Catalogos.Mappings.CompanyMapping.RegisterMapping
 builder.Services.AddSingleton(mapsterConfig);
 // Registrar MapsterMapper ServiceMapper como IMapper
 builder.Services.AddScoped<MapsterMapper.IMapper, MapsterMapper.ServiceMapper>();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 // Registrar Api Explorer y Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    // Configurar Custom SchemaId para evitar conflictos entre DTOs legacy y modulares
+    options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "Nuestra API utiliza la Autenticación JWT usando el esquema Bearer. \n\r\n\r" +
