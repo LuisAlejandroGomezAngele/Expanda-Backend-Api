@@ -46,8 +46,16 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+// Módulo Catalogos - Repositorios
+builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Interfaces.ICompanyRepository, ApiExpanda.Infrastructure.Modules.Catalogos.Repositories.CompanyRepository>();
+
 // Registro de Servicios
 builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.ICategoryService, ApiExpanda.Infrastructure.Services.CategoryService>();
+builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IProductService, ApiExpanda.Infrastructure.Services.ProductService>();
+builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IUserService, ApiExpanda.Infrastructure.Services.UserService>();
+
+// Módulo Catalogos - Servicios
+builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Services.Interfaces.ICompanyService, ApiExpanda.Infrastructure.Modules.Catalogos.Services.CompanyService>();
 builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IProductService, ApiExpanda.Infrastructure.Services.ProductService>();
 builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IUserService, ApiExpanda.Infrastructure.Services.UserService>();
 
