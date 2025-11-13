@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using CategoryEntity = ApiExpanda.Domain.Modules.Catalogos.Entities.Category;
 using ProductEntity = ApiExpanda.Domain.Modules.Catalogos.Entities.Product;
 using CompanyEntity = ApiExpanda.Domain.Modules.Catalogos.Entities.Company;
+using RoleEntity = ApiExpanda.Domain.Modules.Catalogos.Entities.Roles;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
@@ -15,11 +16,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
-        // Configuraciones de entidades modulares - Catalogos
-        modelBuilder.ApplyConfiguration(new CategoryConfiguration());
-        modelBuilder.ApplyConfiguration(new ProductConfiguration());
-        modelBuilder.ApplyConfiguration(new CompanyConfiguration());
     }
 
     // Legacy (mantener temporalmente para migración)
@@ -30,4 +26,5 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CategoryEntity> Categories { get; set; }
     public DbSet<ProductEntity> Products { get; set; }
     public DbSet<CompanyEntity> Companies { get; set; }
+    public new DbSet<RoleEntity> Roles { get; set; }
 }

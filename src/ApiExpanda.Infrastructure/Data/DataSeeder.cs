@@ -5,6 +5,7 @@ using ApiExpanda.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using CategoryEntity = ApiExpanda.Domain.Modules.Catalogos.Entities.Category;
 using ProductEntity = ApiExpanda.Domain.Modules.Catalogos.Entities.Product;
+using RolesEntity = ApiExpanda.Domain.Modules.Catalogos.Entities.Roles;
 
 namespace ApiExpanda.Infrastructure.Data;
 
@@ -19,8 +20,8 @@ public static class DataSeeder
         if (!appContext.Roles.Any())
         {
             appContext.Roles.AddRange(
-                            new IdentityRole { Id = "1", Name = "Admin", NormalizedName = "ADMIN" },
-                            new IdentityRole { Id = "2", Name = "User", NormalizedName = "USER" }
+                            new RolesEntity { Name = "Admin", Description = "Administrador del sistema", CreatedAt = DateTime.Now, IsActive = true },
+                            new RolesEntity { Name = "User", Description = "Usuario regular", CreatedAt = DateTime.Now, IsActive = true }
                         );
         }
         // Seeding de Categorías
@@ -65,11 +66,12 @@ public static class DataSeeder
             appContext.ApplicationUsers.AddRange(adminUser, regularUser);
         }
         // Seeding de UserRoles
+        // Nota: Actualmente usando IdentityUserRole de Identity, considerar crear entidad UserRole personalizada
         if (!appContext.UserRoles.Any())
         {
             appContext.UserRoles.AddRange(
-              new IdentityUserRole<string> { UserId = "admin-001", RoleId = "1" }, // Admin
-              new IdentityUserRole<string> { UserId = "user-001", RoleId = "2" }   // User
+              new IdentityUserRole<string> { UserId = "admin-001", RoleId = "1" }, // Admin - Referencia al rol de Roles custom
+              new IdentityUserRole<string> { UserId = "user-001", RoleId = "2" }   // User - Referencia al rol de Roles custom
             );
         }
 

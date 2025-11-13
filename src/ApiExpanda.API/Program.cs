@@ -50,6 +50,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Interfaces.ICategoryRepository, ApiExpanda.Infrastructure.Modules.Catalogos.Repositories.CategoryRepository>();
 builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Interfaces.IProductRepository, ApiExpanda.Infrastructure.Modules.Catalogos.Repositories.ProductRepository>();
 builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Interfaces.ICompanyRepository, ApiExpanda.Infrastructure.Modules.Catalogos.Repositories.CompanyRepository>();
+builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Interfaces.IRoleRepository, ApiExpanda.Infrastructure.Modules.Catalogos.Repositories.RolesRepository>();
 
 // ============= LEGACY SERVICES (Comentado - usar versiones modulares) =============
 // builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.ICategoryService, ApiExpanda.Infrastructure.Services.CategoryService>();
@@ -60,6 +61,7 @@ builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IUserServi
 builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Services.Interfaces.ICategoryService, ApiExpanda.Infrastructure.Modules.Catalogos.Services.CategoryService>();
 builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Services.Interfaces.IProductService, ApiExpanda.Infrastructure.Modules.Catalogos.Services.ProductService>();
 builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Services.Interfaces.ICompanyService, ApiExpanda.Infrastructure.Modules.Catalogos.Services.CompanyService>();
+builder.Services.AddScoped<ApiExpanda.Application.Modules.Catalogos.Services.Interfaces.IRoleService, ApiExpanda.Infrastructure.Modules.Catalogos.Services.RoleService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -110,6 +112,7 @@ ApiExpanda.Application.Mappings.UserMapping.RegisterMappings(mapsterConfig);
 ApiExpanda.Application.Modules.Catalogos.Mappings.CategoryMapping.RegisterMappings(mapsterConfig);
 ApiExpanda.Application.Modules.Catalogos.Mappings.ProductMapping.RegisterMappings(mapsterConfig);
 ApiExpanda.Application.Modules.Catalogos.Mappings.CompanyMapping.RegisterMappings(mapsterConfig);
+ApiExpanda.Application.Modules.Catalogos.Mappings.RoleMapping.RegisterMappings(mapsterConfig);
 
 builder.Services.AddSingleton(mapsterConfig);
 // Registrar MapsterMapper ServiceMapper como IMapper
