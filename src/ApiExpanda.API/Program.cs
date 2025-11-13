@@ -41,9 +41,15 @@ builder.Services.AddResponseCaching(options =>
     options.UseCaseSensitivePaths = true;
 });
 
+// Registro de Repositorios
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Registro de Servicios
+builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.ICategoryService, ApiExpanda.Infrastructure.Services.CategoryService>();
+builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IProductService, ApiExpanda.Infrastructure.Services.ProductService>();
+builder.Services.AddScoped<ApiExpanda.Application.Services.Interfaces.IUserService, ApiExpanda.Infrastructure.Services.UserService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {

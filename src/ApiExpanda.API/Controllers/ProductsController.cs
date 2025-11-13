@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using ApiExpanda.Domain.Entities;
 using ApiExpanda.Application.DTOs;
-using ApiExpanda.Application.Interfaces;
+using ApiExpanda.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
-using ApiExpanda.Application.DTOs.Responses;
 
 
 namespace ApiExpanda.Controllers;
@@ -16,27 +14,20 @@ namespace ApiExpanda.Controllers;
 
 public class ProductsController : ControllerBase
 {
-    private readonly IProductRepository _productRepository;
+    private readonly IProductService _productService;
 
-    private readonly ICategoryRepository _categoryRepository;
-
-    private readonly MapsterMapper.IMapper _mapper;
-
-    public ProductsController(IProductRepository productRepository, ICategoryRepository categoryRepository, MapsterMapper.IMapper mapper)
+    public ProductsController(IProductService productService)
     {
-        _productRepository = productRepository;
-        _categoryRepository = categoryRepository;
-        _mapper = mapper;
+        _productService = productService;
     }
 
     [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetProducts()
+    public async Task<IActionResult> GetProducts()
     {
-        var products = _productRepository.GetProducts();
-        var productsDto = _mapper.Map<List<ProductDto>>(products);
+        var productsDto = await _productService.GetAllProductsAsync();
         return Ok(productsDto);
     }
 
@@ -46,14 +37,13 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetProduct(int productId)
+    public async Task<IActionResult> GetProduct(int productId)
     {
-        var product = _productRepository.GetProduct(productId);
-        if (product == null)
+        var productDto = await _productService.GetProductByIdAsync(productId);
+        if (productDto == null)
         {
             return NotFound("El producto con el id especificado no existe.");
         }
-        var productDto = _mapper.Map<ProductDto>(product);
         return Ok(productDto);
     }
 
@@ -63,30 +53,20 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetProductsInPage([FromQuery] int page = 1, int pageSize = 10)
+    public async Task<IActionResult> GetProductsInPage([FromQuery] int page = 1, int pageSize = 10)
     {
         if (page <= 0 || pageSize <= 0)
         {
             return BadRequest("El número de página y el tamaño de página deben ser mayores que cero.");
         }
-        var totalProducts = _productRepository.GetTotalProducts();
-        var totalPages = (int)Math.Ceiling(totalProducts / (double)pageSize);
-        var products = _productRepository.GetProductsInPages(page, pageSize);
 
-        if (products == null || !products.Any())
+        var response = await _productService.GetProductsInPageAsync(page, pageSize);
+        
+        if (response.Items == null || !response.Items.Any())
         {
             return NotFound("No se encontraron productos.");
         }
 
-        var productsDto = _mapper.Map<List<ProductDto>>(products);
-        var response = new PaginationResponse<ProductDto>
-        {
-            TotalItems = totalProducts,
-            PageSize = pageSize,
-            PageNumber = page,
-            TotalPages = totalPages,
-            Items = productsDto
-        };
         return Ok(response);
     }
 
@@ -97,56 +77,42 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult CreateProduct([FromForm] CreateProductDto createProductDto)
+    public async Task<IActionResult> CreateProduct([FromForm] CreateProductDto createProductDto)
     {
         if (createProductDto == null)
         {
             return BadRequest(ModelState);
         }
-        if (_productRepository.ProductExists(createProductDto.Name))
+
+        try
         {
-            ModelState.AddModelError("CustomError", "El producto ya existe.");
+            string? imagePath = null;
+            
+            if (createProductDto.Image != null)
+            {
+                imagePath = await SaveProductImageAsync(createProductDto.Image);
+            }
+
+            var productDto = await _productService.CreateProductAsync(createProductDto, imagePath);
+            return CreatedAtRoute("GetProduct", new { productId = productDto.ProductId }, productDto);
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("CustomError", ex.Message);
             return BadRequest(ModelState);
         }
-        if (_categoryRepository.CategoryExists(createProductDto.CategoryId) == false)
+        catch (Exception ex)
         {
-            ModelState.AddModelError("CustomError", "La categoria especificada no existe.");
-            return BadRequest(ModelState);
-        }
-
-        var product = _mapper.Map<Product>(createProductDto);
-        //Agregando imagen
-
-        if (createProductDto.Image != null)
-        {
-            UploadProductImage(createProductDto, product);
-
-        }
-        else if (!string.IsNullOrEmpty(createProductDto.ImgUrl))
-        {
-            product.ImgUrl = "https://placehold.com/600x400";
-        }
-
-        if (!_productRepository.CreateProduct(product))
-        {
-            ModelState.AddModelError("CustomError", $"Algo salio mal guardando el registro {product.Name}");
+            ModelState.AddModelError("CustomError", $"Error: {ex.Message}");
             return StatusCode(500, ModelState);
         }
-        // Usar la clave primaria definida en el modelo (ProductId)
-    var createProduct = _productRepository.GetProduct(product.ProductId);
-        if (createProduct == null)
-        {
-            ModelState.AddModelError("CustomError", "No se pudo recuperar el producto creado.");
-            return StatusCode(500, ModelState);
-        }
-        var productDto = _mapper.Map<ProductDto>(createProduct);
-        return CreatedAtRoute("GetProduct", new { productId = product.ProductId }, productDto);
     }
 
-    private void UploadProductImage(dynamic productDto, Product product)
+    private async Task<string> SaveProductImageAsync(IFormFile image)
     {
-        string fileName = product.ProductId + Guid.NewGuid().ToString() + Path.GetExtension(productDto.Image.FileName);
+        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
         var imageFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "ProductsImages");
+        
         if (!Directory.Exists(imageFolder))
         {
             Directory.CreateDirectory(imageFolder);
@@ -154,18 +120,19 @@ public class ProductsController : ControllerBase
 
         var filePath = Path.Combine(imageFolder, fileName);
         FileInfo file = new FileInfo(filePath);
+        
         if (file.Exists)
         {
             file.Delete();
         }
+        
         using (var stream = new FileStream(filePath, FileMode.Create))
         {
-            productDto.Image.CopyTo(stream);
+            await image.CopyToAsync(stream);
         }
 
         var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}/{HttpContext.Request.PathBase.Value}";
-        product.ImgUrl = $"{baseUrl}ProductsImages/{fileName}";
-        product.ImgUrlLocal = $"ProductsImages/{fileName}";
+        return $"{baseUrl}ProductsImages/{fileName}";
     }
 
     [HttpGet("searchProductByCategory/{categoryId:int}", Name = "GetProductsForCategory")]
@@ -173,14 +140,13 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetProductsForCategory(int categoryId)
+    public async Task<IActionResult> GetProductsForCategory(int categoryId)
     {
-        var products = _productRepository.GetProductsInCategory(categoryId);
-        if (products == null || !products.Any())
+        var productsDto = await _productService.GetProductsForCategoryAsync(categoryId);
+        if (productsDto == null || !productsDto.Any())
         {
             return NotFound("No se encontraron productos para la categoría especificada.");
         }
-        var productsDto = _mapper.Map<List<ProductDto>>(products);
         return Ok(productsDto);
     }
 
@@ -189,22 +155,22 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetProductsForNameDescription(string name)
+    public async Task<IActionResult> GetProductsForNameDescription(string name)
     {
-        var products = _productRepository.SearchProduct(name);
-        if (products == null || !products.Any())
+        var productsDto = await _productService.SearchProductAsync(name);
+        if (productsDto == null || !productsDto.Any())
         {
             return NotFound("No se encontraron productos para el nombre o descripción especificada.");
         }
-        var productsDto = _mapper.Map<List<ProductDto>>(products);
         return Ok(productsDto);
     }
+
     [HttpPatch("buyProduct/{name}/{quantity:int}", Name = "BuyProduct")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult BuyProduct(string name, int quantity)
+    public async Task<IActionResult> BuyProduct(string name, int quantity)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -214,21 +180,18 @@ public class ProductsController : ControllerBase
         {
             return BadRequest("La cantidad debe ser mayor que cero.");
         }
-        var foundProduct = _productRepository.GetProductByName(name);
-        if (foundProduct == null)
-        {
-            return NotFound("El producto con el nombre especificado no existe.");
-        }
 
-        var result = _productRepository.BuyProduct(name, quantity);
-        if (!result)
+        try
         {
-            ModelState.AddModelError("CustomError", "No hay suficiente stock para completar la compra.");
+            await _productService.BuyProductAsync(name, quantity);
+            var units = quantity == 1 ? "unidad" : "unidades";
+            return Ok($"Compra exitosa de {quantity} {units} del producto '{name}'.");
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("CustomError", ex.Message);
             return BadRequest(ModelState);
         }
-        
-        var units = quantity == 1 ? "unidad" : "unidades";
-        return Ok($"Compra exitosa de {quantity} {units} del producto '{name}'.");
     }
 
     [HttpPut("{productId:int}", Name = "UpdateProduct")]
@@ -237,43 +200,41 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult UpdateProduct(int productId, [FromForm] UpdateProductDto updateProductDto)
+    public async Task<IActionResult> UpdateProduct(int productId, [FromForm] UpdateProductDto updateProductDto)
     {
         if (updateProductDto == null)
         {
             return BadRequest(ModelState);
         }
-        if (!_productRepository.ProductExists(productId))
+
+        try
         {
-            ModelState.AddModelError("CustomError", "El producto no existe.");
+            string? imagePath = null;
+            
+            if (updateProductDto.Image != null)
+            {
+                imagePath = await SaveProductImageAsync(updateProductDto.Image);
+            }
+
+            var result = await _productService.UpdateProductAsync(productId, updateProductDto, imagePath);
+            if (!result)
+            {
+                ModelState.AddModelError("CustomError", "Algo salió mal actualizando el producto");
+                return StatusCode(500, ModelState);
+            }
+            
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("CustomError", ex.Message);
             return BadRequest(ModelState);
         }
-        if (!_categoryRepository.CategoryExists(updateProductDto.CategoryId))
+        catch (Exception ex)
         {
-            ModelState.AddModelError("CustomError", "La categoria especificada no existe.");
-            return BadRequest(ModelState);
-        }
-
-        var product = _mapper.Map<Product>(updateProductDto);
-        product.ProductId = productId;
-        //Agregando imagen
-
-        if (updateProductDto.Image != null)
-        {
-            UploadProductImage(updateProductDto, product);
-
-        }
-        else if (!string.IsNullOrEmpty(updateProductDto.ImgUrl))
-        {
-            product.ImgUrl = "https://placehold.com/600x400";
-        }
-        if (!_productRepository.UpdateProduct(product))
-        {
-            ModelState.AddModelError("CustomError", $"Algo salio mal guardando el registro {product.Name}");
+            ModelState.AddModelError("CustomError", $"Error: {ex.Message}");
             return StatusCode(500, ModelState);
         }
-        // Usar la clave primaria definida en el modelo (ProductId)
-        return NoContent();
     }
 
     [HttpDelete("{productId:int}", Name = "DeleteProduct")]
@@ -281,25 +242,35 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public IActionResult DeleteProduct(int productId)
+    public async Task<IActionResult> DeleteProduct(int productId)
     {
         if (productId <= 0)
         {
             return BadRequest(ModelState);
         }
-        var product = _productRepository.GetProduct(productId);
+
+        var product = await _productService.GetProductByIdAsync(productId);
         if (product == null)
         {
             return NotFound("El producto con el id especificado no existe.");
         }
 
-        if (!_productRepository.DeleteProduct(product))
+        try
         {
-            ModelState.AddModelError("CustomError", $"Algo salio mal eliminando el registro {product.Name}");
+            var result = await _productService.DeleteProductAsync(productId);
+            if (!result)
+            {
+                ModelState.AddModelError("CustomError", "Algo salió mal eliminando el producto");
+                return StatusCode(500, ModelState);
+            }
+            
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("CustomError", $"Error: {ex.Message}");
             return StatusCode(500, ModelState);
         }
-
-        return NoContent();
     }
 
 }

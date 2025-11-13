@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ApiExpanda.Application.DTOs;
-using ApiExpanda.Application.Interfaces;
-using ApiExpanda.Domain.Entities;
-using Microsoft.AspNetCore.Cors;
+using ApiExpanda.Application.Services.Interfaces;
 using ApiExpanda.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
@@ -18,28 +16,20 @@ namespace ApiExpanda.Controllers.V2;
 //[EnableCors(PolicyNames.AllowSpecificOrigin)]
 public class CategoriesController : ControllerBase
 {
-    private readonly ICategoryRepository _categoryRepository;
+    private readonly ICategoryService _categoryService;
 
-    private readonly MapsterMapper.IMapper _mapper;
-
-    public CategoriesController(ICategoryRepository categoryRepository, MapsterMapper.IMapper mapper)
+    public CategoriesController(ICategoryService categoryService)
     {
-        _categoryRepository = categoryRepository;
-        _mapper = mapper;
+        _categoryService = categoryService;
     }
 
     [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetCategoriesOrderById()
+    public async Task<IActionResult> GetCategoriesOrderById()
     {
-        var categories = _categoryRepository.GetCategories().OrderBy(c => c.Id).ToList();
-        var categoriesDto = new List<CategoryDto>();
-        foreach (var category in categories)
-        {
-            categoriesDto.Add(_mapper.Map<CategoryDto>(category));
-        }
+        var categoriesDto = await _categoryService.GetCategoriesOrderedByIdAsync();
         return Ok(categoriesDto);
     }
 
@@ -51,14 +41,13 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IActionResult GetCategory(int id)
+    public async Task<IActionResult> GetCategory(int id)
     {
-        var category = _categoryRepository.GetCategory(id);
-        if (category == null)
+        var categoryDto = await _categoryService.GetCategoryByIdAsync(id);
+        if (categoryDto == null)
         {
             return NotFound("La categoria con el id especificado no existe.");
         }
-    var categoryDto = _mapper.Map<CategoryDto>(category);
 
         return Ok(categoryDto);
     }
@@ -69,26 +58,29 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult CreateCategory([FromBody] CreateCategoryDto createCategoryDto)
+    public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto createCategoryDto)
     {
         if (createCategoryDto == null)
         {
             return BadRequest(ModelState);
         }
-        if (_categoryRepository.CategoryExists(createCategoryDto.Name))
+
+        if (await _categoryService.CategoryExistsByNameAsync(createCategoryDto.Name))
         {
             ModelState.AddModelError("CustomError", "La categoria ya existe.");
             return BadRequest(ModelState);
         }
 
-    var category = _mapper.Map<Category>(createCategoryDto);
-        if (!_categoryRepository.CreateCategory(category))
+        try
         {
-            ModelState.AddModelError("CustomError", $"Algo salio mal guardando el registro {category.Name}");
+            var categoryDto = await _categoryService.CreateCategoryAsync(createCategoryDto);
+            return CreatedAtRoute("GetCategory", new { id = categoryDto.Id }, categoryDto);
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("CustomError", ex.Message);
             return StatusCode(500, ModelState);
         }
-
-        return CreatedAtRoute("GetCategory", new { id = category.Id }, category);
     }
 
     [HttpPatch("{id:int}", Name = "UpdateCategory")]
@@ -97,33 +89,39 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult UpdateCategory(int id, [FromBody] CreateCategoryDto updateCategoryDto)
+    public async Task<IActionResult> UpdateCategory(int id, [FromBody] CreateCategoryDto updateCategoryDto)
     {
         if (updateCategoryDto == null)
         {
             return BadRequest(ModelState);
         }
 
-        var category = _categoryRepository.GetCategory(id);
-        if (category == null)
+        if (!await _categoryService.CategoryExistsAsync(id))
         {
             return NotFound("La categoria con el id especificado no existe.");
         }
-        if (_categoryRepository.CategoryExists(updateCategoryDto.Name))
+
+        if (await _categoryService.CategoryExistsByNameAsync(updateCategoryDto.Name))
         {
             ModelState.AddModelError("CustomError", "La categoria ya existe.");
             return BadRequest(ModelState);
         }
 
-    _mapper.Map(updateCategoryDto, category);
-        category.Id = id;
-        if (!_categoryRepository.UpdateCategory(category))
+        try
         {
-            ModelState.AddModelError("CustomError", $"Algo salio mal actualizando el registro {category.Name}");
+            var result = await _categoryService.UpdateCategoryAsync(id, updateCategoryDto);
+            if (!result)
+            {
+                ModelState.AddModelError("CustomError", "Algo salió mal actualizando el registro");
+                return StatusCode(500, ModelState);
+            }
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("CustomError", ex.Message);
             return StatusCode(500, ModelState);
         }
-
-        return NoContent();
     }
     
     [HttpDelete("{id:int}", Name = "DeleteCategory")]
@@ -132,20 +130,27 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult DeleteCategory(int id)
+    public async Task<IActionResult> DeleteCategory(int id)
     {
-        if (!_categoryRepository.CategoryExists(id))
+        if (!await _categoryService.CategoryExistsAsync(id))
         {
             return NotFound("La categoria con el id especificado no existe.");
         }
-        var category = _categoryRepository.GetCategory(id);
 
-        if (!_categoryRepository.DeleteCategory(category!))
+        try
         {
-            ModelState.AddModelError("CustomError", $"Algo salio mal eliminando el registro {category!.Name}");
+            var result = await _categoryService.DeleteCategoryAsync(id);
+            if (!result)
+            {
+                ModelState.AddModelError("CustomError", "Algo salió mal eliminando el registro");
+                return StatusCode(500, ModelState);
+            }
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("CustomError", ex.Message);
             return StatusCode(500, ModelState);
         }
-        return NoContent();
-        
     }
 }

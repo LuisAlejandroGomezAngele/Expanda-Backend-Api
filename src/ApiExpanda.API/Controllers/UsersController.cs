@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using ApiExpanda.Domain.Entities;
 using ApiExpanda.Application.DTOs;
-using ApiExpanda.Application.Interfaces;
+using ApiExpanda.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
 
@@ -13,23 +12,19 @@ namespace ApiExpanda.Controllers;
 [ApiVersionNeutral]
 public class UsersController : ControllerBase
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
 
-    private readonly MapsterMapper.IMapper _mapper;
-
-    public UsersController(IUserRepository userRepository, MapsterMapper.IMapper mapper)
+    public UsersController(IUserService userService)
     {
-        _userRepository = userRepository;
-        _mapper = mapper;
+        _userService = userService;
     }
     
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetUsers()
+    public async Task<IActionResult> GetUsers()
     {
-        var users = _userRepository.GetUsers();
-        var usersDto = _mapper.Map<List<UserDto>>(users);
+        var usersDto = await _userService.GetAllUsersAsync();
         return Ok(usersDto);
     }
 
@@ -38,14 +33,13 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetUser(string userId)
+    public async Task<IActionResult> GetUser(string userId)
     {
-        var user = _userRepository.GetUser(userId);
-        if (user == null)
+        var userDto = await _userService.GetUserByIdAsync(userId);
+        if (userDto == null)
         {
             return NotFound("El usuario con el id especificado no existe.");
         }
-        var userDto = _mapper.Map<UserDto>(user);
         return Ok(userDto);
     }
 
@@ -63,27 +57,14 @@ public class UsersController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        if (string.IsNullOrWhiteSpace(createUserDto.Username))
-        {
-            return BadRequest("El nombre de usuario no puede estar vacío.");
-        }
-
-        if (!_userRepository.IsUniqueUser(createUserDto.Username))
-        {
-            return BadRequest("El nombre de usuario ya existe.");
-        }
-
         try
         {
-            var result = await _userRepository.Register(createUserDto);
-
-            if (result == null)
-            {
-                ModelState.AddModelError("", "Error al registrar el usuario");
-                return StatusCode(500, ModelState);
-            }
-
+            var result = await _userService.RegisterAsync(createUserDto);
             return CreatedAtRoute("GetUser", new { userId = result.Id }, result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
@@ -107,7 +88,7 @@ public class UsersController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await _userRepository.Login(userLoginDto);
+        var result = await _userService.LoginAsync(userLoginDto);
 
         if (result == null)
         {
